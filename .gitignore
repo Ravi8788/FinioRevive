@@ -1,0 +1,26 @@
+# dependencies
+**/node_modules/
+
+# build outputs
+**/dist/
+**/coverage/
+
+# environment files
+**/.env
+**/.env.*.local
+
+# local databases and generated files
+backend/finio.db
+backend/tests/*.db
+backend/tests/*.sqlite
+backend/pdf/notices/*.pdf
+
+# logs
+*.log
+logs/
+
+# OS/editor files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
