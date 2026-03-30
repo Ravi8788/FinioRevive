@@ -140,6 +140,38 @@ router.get('/:id/details', roleCheck(['super_admin', 'bdm', 'agent', 'telecaller
   }
 });
 
+router.get('/:id', roleCheck(['super_admin', 'bdm', 'agent', 'telecaller', 'legal', 'accounts']), async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const where = ['m.id = ?'];
+    const params = [id];
+    buildRoleScope(req, where, params);
+
+    const member = await get(
+      `SELECT
+        m.*,
+        s.name AS society_name,
+        agent.name AS agent_name,
+        tele.name AS telecaller_name
+       FROM members m
+       JOIN societies s ON m.society_id = s.id
+       LEFT JOIN users agent ON m.assigned_agent_id = agent.id
+       LEFT JOIN users tele ON m.assigned_telecaller_id = tele.id
+       WHERE ${where.join(' AND ')}`,
+      params
+    );
+
+    if (!member) {
+      return res.status(404).json({ message: 'Member not found' });
+    }
+
+    return res.json(member);
+  } catch (error) {
+    return res.status(500).json({ message: 'Failed to fetch member', error: error.message });
+  }
+});
+
 router.post('/', roleCheck(['super_admin', 'bdm']), async (req, res) => {
   try {
     const {

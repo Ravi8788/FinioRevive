@@ -64,6 +64,14 @@ function all(sql, params = []) {
   });
 }
 
+async function ensureColumn(tableName, columnName, columnDefinition) {
+  const columns = await all(`PRAGMA table_info(${tableName})`);
+  const exists = columns.some((column) => column.name === columnName);
+  if (exists) return;
+
+  await run(`ALTER TABLE ${tableName} ADD COLUMN ${columnName} ${columnDefinition}`);
+}
+
 async function initDb() {
   await run(`
     CREATE TABLE IF NOT EXISTS users (
@@ -76,12 +84,7 @@ async function initDb() {
     )
   `);
 
-  // Safe migration for older databases that were created before created_at existed.
-  try {
-    await run('ALTER TABLE users ADD COLUMN created_at TEXT');
-  } catch (error) {
-    // Ignore duplicate-column errors.
-  }
+  await ensureColumn('users', 'created_at', 'TEXT');
 
   // Backfill timestamp for pre-existing rows in upgraded databases.
   await run("UPDATE users SET created_at = COALESCE(created_at, datetime('now'))");
@@ -95,6 +98,9 @@ async function initDb() {
       FOREIGN KEY (bdm_id) REFERENCES users(id) ON DELETE SET NULL
     )
   `);
+
+  await ensureColumn('societies', 'address', 'TEXT');
+  await ensureColumn('societies', 'bdm_id', 'INTEGER');
 
   await run(`
     CREATE TABLE IF NOT EXISTS members (
@@ -113,6 +119,14 @@ async function initDb() {
       FOREIGN KEY (assigned_telecaller_id) REFERENCES users(id) ON DELETE SET NULL
     )
   `);
+
+  await ensureColumn('members', 'phone', 'TEXT');
+  await ensureColumn('members', 'email', 'TEXT');
+  await ensureColumn('members', 'due_amount', 'REAL NOT NULL DEFAULT 0');
+  await ensureColumn('members', 'due_since', 'TEXT');
+  await ensureColumn('members', 'status', "TEXT NOT NULL DEFAULT 'pending'");
+  await ensureColumn('members', 'assigned_agent_id', 'INTEGER');
+  await ensureColumn('members', 'assigned_telecaller_id', 'INTEGER');
 
   await run(`
     CREATE TABLE IF NOT EXISTS calls (
@@ -154,12 +168,7 @@ async function initDb() {
     )
   `);
 
-  // Safe migration for older databases that were created before created_at existed.
-  try {
-    await run('ALTER TABLE payments ADD COLUMN created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP');
-  } catch (error) {
-    // Ignore duplicate-column errors.
-  }
+  await ensureColumn('payments', 'created_at', 'TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP');
 
   await run(`
     CREATE TABLE IF NOT EXISTS audit_logs (
