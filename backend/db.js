@@ -7,7 +7,17 @@ const dbDir = path.dirname(dbPath);
 
 // Ensure the database directory exists before opening SQLite.
 if (!fs.existsSync(dbDir)) {
-  fs.mkdirSync(dbDir, { recursive: true });
+  try {
+    fs.mkdirSync(dbDir, { recursive: true });
+  } catch (error) {
+    if (error.code === 'EACCES') {
+      throw new Error(
+        `Cannot create DB directory at ${dbDir} (permission denied). ` +
+        `If DB_PATH is /var/data/finio.db on Render, attach and mount a persistent disk at /var/data first.`
+      );
+    }
+    throw error;
+  }
 }
 
 const db = new sqlite3.Database(dbPath, (error) => {
