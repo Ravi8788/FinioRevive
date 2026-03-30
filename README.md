@@ -112,6 +112,12 @@ Run:
 
 ## Deployment
 
+### Live URLs
+
+- Frontend (Netlify): https://finiorevive.netlify.app
+- Backend (Render): https://finiorevive.onrender.com
+- Health Check: https://finiorevive.onrender.com/api/health
+
 ### Frontend on Netlify
 
 Netlify config is already included in `netlify.toml`.
