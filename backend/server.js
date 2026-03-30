@@ -88,6 +88,10 @@ app.use(cors(corsOptions));
 app.use(express.json());
 app.use('/pdf', express.static(path.join(__dirname, 'pdf')));
 
+app.get('/', (req, res) => {
+  res.json({ ok: true, app: 'FinioRevive API', health: '/api/health' });
+});
+
 app.get('/api/health', (req, res) => {
   res.json({ ok: true, app: 'FinioRevive' });
 });
