@@ -24,8 +24,25 @@ const frontendOrigin = process.env.FRONTEND_URL || '';
 
 const allowedOrigins = frontendOrigin
   .split(',')
-  .map((origin) => origin.trim())
+  .map((origin) => String(origin || '').trim().replace(/\/$/, '').toLowerCase())
   .filter(Boolean);
+
+function isAllowedNetlifyPreview(origin) {
+  try {
+    const requestHost = new URL(origin).hostname.toLowerCase();
+
+    return allowedOrigins.some((allowedOrigin) => {
+      const allowedHost = new URL(allowedOrigin).hostname.toLowerCase();
+      if (!allowedHost.endsWith('.netlify.app')) return false;
+
+      // Accept Netlify deploy-preview/branch URLs like:
+      // https://abc123--finiorevive.netlify.app
+      return requestHost.endsWith(`--${allowedHost}`);
+    });
+  } catch (error) {
+    return false;
+  }
+}
 
 const corsOptions = {
   origin(origin, callback) {
@@ -33,7 +50,13 @@ const corsOptions = {
       return callback(null, true);
     }
 
-    if (!allowedOrigins.length || allowedOrigins.includes(origin)) {
+    const normalizedOrigin = String(origin).trim().replace(/\/$/, '').toLowerCase();
+
+    if (
+      !allowedOrigins.length
+      || allowedOrigins.includes(normalizedOrigin)
+      || isAllowedNetlifyPreview(normalizedOrigin)
+    ) {
       return callback(null, true);
     }
 
