@@ -114,17 +114,27 @@ Run:
 
 ### Frontend on Netlify
 
-Recommended settings:
+Netlify config is already included in `netlify.toml`.
 
-- Base directory: `frontend`
-- Build command: `npm run build`
-- Publish directory: `frontend/dist`
-- Environment variable: `VITE_API_URL=<your_backend_url>/api`
+Required frontend environment variable on Netlify:
+
+- `VITE_API_URL=<your_backend_url>/api`
 
 ### Backend Hosting
 
-Backend is an Express API and should be hosted on a Node-compatible platform (for example Render, Railway, Fly.io, VPS, etc).
-Point Netlify frontend `VITE_API_URL` to that hosted backend URL.
+Backend is an Express API and should be hosted on a Node-compatible platform with persistent disk support
+(for example Render, Railway, Fly.io, VPS, etc).
+
+Use these backend environment variables:
+
+- `PORT=5000`
+- `JWT_SECRET=<strong_secret>`
+- `FRONTEND_URL=https://<your-netlify-site>.netlify.app`
+- `DB_PATH=<persistent_disk_path>/finio.db`
+
+Point Netlify frontend `VITE_API_URL` to that hosted backend `/api` URL.
+
+For a full git-to-production checklist, see `DEPLOY_NETLIFY.md`.
 
 ## Security Notes
 

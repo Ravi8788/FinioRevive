@@ -20,8 +20,28 @@ dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 5000;
+const frontendOrigin = process.env.FRONTEND_URL || '';
 
-app.use(cors());
+const allowedOrigins = frontendOrigin
+  .split(',')
+  .map((origin) => origin.trim())
+  .filter(Boolean);
+
+const corsOptions = {
+  origin(origin, callback) {
+    if (!origin) {
+      return callback(null, true);
+    }
+
+    if (!allowedOrigins.length || allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    }
+
+    return callback(new Error('CORS origin not allowed'));
+  },
+};
+
+app.use(cors(corsOptions));
 app.use(express.json());
 app.use('/pdf', express.static(path.join(__dirname, 'pdf')));
 

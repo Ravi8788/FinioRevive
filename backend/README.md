@@ -40,3 +40,16 @@ Response metadata is returned in headers:
 ## Data Storage
 
 All records are stored in `backend/finio.db` and persist across restarts.
+
+## Production Deployment Notes
+
+If frontend is on Netlify, deploy backend on a Node host with persistent disk.
+
+Set environment variables:
+
+- `PORT=5000`
+- `JWT_SECRET=<strong_secret>`
+- `FRONTEND_URL=https://<your-netlify-site>.netlify.app`
+- `DB_PATH=<persistent_disk_path>/finio.db`
+
+Reason: SQLite requires persistent storage, which should be provided by backend hosting.
