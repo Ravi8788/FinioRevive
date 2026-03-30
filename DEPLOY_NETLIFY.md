@@ -64,3 +64,18 @@ Check:
   - Ensure backend `DB_PATH` points to persistent storage, not ephemeral temp storage.
 - Frontend shows network errors:
   - Ensure Netlify `VITE_API_URL` includes `/api`.
+
+## Current Project Values
+
+- Render backend URL: `https://finiorevive.onrender.com`
+- Render API URL for frontend: `https://finiorevive.onrender.com/api`
+- Netlify frontend URL: `pending` (not deployed yet)
+
+Use these values now:
+
+- Render `FRONTEND_URL`: keep empty until Netlify is live
+- Netlify `VITE_API_URL`: `https://finiorevive.onrender.com/api`
+
+After Netlify is deployed, update Render:
+
+- `FRONTEND_URL=https://<your-netlify-site>.netlify.app`
