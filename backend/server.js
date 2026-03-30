@@ -20,7 +20,11 @@ dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 5000;
+const isProduction = process.env.NODE_ENV === 'production';
 const frontendOrigin = process.env.FRONTEND_URL || '';
+const allowNetlifyPreviewOrigins = String(process.env.ALLOW_NETLIFY_PREVIEW_ORIGINS || '')
+  .trim()
+  .toLowerCase() === 'true';
 
 const allowedOrigins = frontendOrigin
   .split(',')
@@ -28,6 +32,8 @@ const allowedOrigins = frontendOrigin
   .filter(Boolean);
 
 function isAllowedNetlifyPreview(origin) {
+  if (!allowNetlifyPreviewOrigins) return false;
+
   try {
     const requestHost = new URL(origin).hostname.toLowerCase();
 
@@ -46,15 +52,29 @@ function isAllowedNetlifyPreview(origin) {
 
 const corsOptions = {
   origin(origin, callback) {
+    // Non-browser requests may not include Origin.
     if (!origin) {
       return callback(null, true);
     }
 
     const normalizedOrigin = String(origin).trim().replace(/\/$/, '').toLowerCase();
 
+    // In production, never allow all origins by accident.
+    if (isProduction && !allowedOrigins.length) {
+      return callback(new Error('CORS misconfigured: FRONTEND_URL is required in production'));
+    }
+
+    // Local development convenience when FRONTEND_URL is not set.
+    if (!isProduction && !allowedOrigins.length) {
+      if (normalizedOrigin === 'http://localhost:5173' || normalizedOrigin === 'http://127.0.0.1:5173') {
+        return callback(null, true);
+      }
+
+      return callback(new Error('CORS origin not allowed'));
+    }
+
     if (
-      !allowedOrigins.length
-      || allowedOrigins.includes(normalizedOrigin)
+      allowedOrigins.includes(normalizedOrigin)
       || isAllowedNetlifyPreview(normalizedOrigin)
     ) {
       return callback(null, true);
