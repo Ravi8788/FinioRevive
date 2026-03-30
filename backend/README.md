@@ -52,4 +52,12 @@ Set environment variables:
 - `FRONTEND_URL=https://<your-netlify-site>.netlify.app`
 - `DB_PATH=<persistent_disk_path>/finio.db`
 
+If your host does not provide shell access (for example, some free tiers), you can bootstrap a super admin at startup:
+
+- `BOOTSTRAP_ADMIN_NAME=<admin_name>`
+- `BOOTSTRAP_ADMIN_EMAIL=<admin_email>`
+- `BOOTSTRAP_ADMIN_PASSWORD=<admin_password>`
+
+The bootstrap admin is created only when that email does not already exist.
+
 Reason: SQLite requires persistent storage, which should be provided by backend hosting.

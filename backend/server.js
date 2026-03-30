@@ -2,8 +2,9 @@ const express = require('express');
 const cors = require('cors');
 const dotenv = require('dotenv');
 const path = require('path');
+const bcrypt = require('bcryptjs');
 
-const { initDb } = require('./db');
+const { initDb, get, run } = require('./db');
 const auth = require('./middleware/auth');
 
 const authRoutes = require('./routes/authRoutes');
@@ -110,8 +111,33 @@ app.use((err, req, res, next) => {
   return res.status(500).json({ message: 'Unexpected server error', error: err.message });
 });
 
+async function ensureBootstrapAdmin() {
+  const adminName = String(process.env.BOOTSTRAP_ADMIN_NAME || '').trim();
+  const adminEmail = String(process.env.BOOTSTRAP_ADMIN_EMAIL || '').trim().toLowerCase();
+  const adminPassword = String(process.env.BOOTSTRAP_ADMIN_PASSWORD || '');
+
+  if (!adminName || !adminEmail || !adminPassword) return;
+
+  if (adminPassword.length < 6) {
+    console.warn('Skipping bootstrap admin: BOOTSTRAP_ADMIN_PASSWORD must be at least 6 characters.');
+    return;
+  }
+
+  const existingUser = await get('SELECT id FROM users WHERE email = ?', [adminEmail]);
+  if (existingUser) return;
+
+  const passwordHash = await bcrypt.hash(adminPassword, 10);
+  await run(
+    'INSERT INTO users (name, email, password, role) VALUES (?, ?, ?, ?)',
+    [adminName, adminEmail, passwordHash, 'super_admin']
+  );
+
+  console.log(`Bootstrap admin ensured for ${adminEmail}.`);
+}
+
 async function startServer() {
   await initDb();
+  await ensureBootstrapAdmin();
   return app.listen(PORT, () => {
     console.log(`FinioRevive backend running on port ${PORT}`);
   });
