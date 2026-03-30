@@ -1,8 +1,27 @@
 const path = require('path');
+const fs = require('fs');
 const sqlite3 = require('sqlite3').verbose();
 
 const dbPath = process.env.DB_PATH || path.join(__dirname, 'finio.db');
-const db = new sqlite3.Database(dbPath);
+const dbDir = path.dirname(dbPath);
+
+// Ensure the database directory exists before opening SQLite.
+if (!fs.existsSync(dbDir)) {
+  fs.mkdirSync(dbDir, { recursive: true });
+}
+
+const db = new sqlite3.Database(dbPath, (error) => {
+  if (!error) return;
+
+  if (error.code === 'SQLITE_CANTOPEN') {
+    throw new Error(
+      `SQLite cannot open DB at ${dbPath}. Set DB_PATH to a writable location. ` +
+      `On Render, mount a persistent disk at /var/data and set DB_PATH=/var/data/finio.db.`
+    );
+  }
+
+  throw error;
+});
 
 db.serialize(() => {
   db.run('PRAGMA foreign_keys = ON');
